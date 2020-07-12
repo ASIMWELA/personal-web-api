@@ -2,13 +2,14 @@ package com.personal.website.controller;
 
 import com.personal.website.entity.ContactInfoEntity;
 import com.personal.website.entity.ProjectDetailsEntity;
-import com.personal.website.entity.SubscriberEntity;
 import com.personal.website.entity.UserEntity;
+import com.personal.website.payload.SignUpRequest;
 import com.personal.website.service.ProfilePictureService;
 import com.personal.website.service.ProjectDetailsService;
-import com.personal.website.service.SubscriberService;
 import com.personal.website.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,8 +23,6 @@ public class UserController
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private SubscriberService subscriberService;
 
     @Autowired
     private ProjectDetailsService projectDetailsService;
@@ -36,30 +35,30 @@ public class UserController
 //
 //    }
 
-    @RequestMapping(value = "/save", method = RequestMethod.POST)
-    public UserEntity saveUser(@RequestBody UserEntity entity)
+    @RequestMapping(
+            value = "/save",
+            method = RequestMethod.POST,
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public UserEntity saveUser(@RequestBody SignUpRequest signUpRequest)
     {
-        return userService.saveUser(entity);
+        return userService.saveAdmin(signUpRequest);
     }
 
+    @PreAuthorize("hasRole(ADMIN)")
     @RequestMapping(value="/upload-profile/{userName}", method = RequestMethod.PUT)
     public UserEntity upload(@RequestParam("profile")MultipartFile file, @PathVariable("userName") String userName)
     {
        return userService.updateProfilePicture(file, userName);
     }
 
-    @RequestMapping(value="/contact-info/{userName}", method = RequestMethod.PUT)
+    @RequestMapping(value="/contact-info/{userName}",
+            method = RequestMethod.PUT,
+            produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public UserEntity addContactInfo(@RequestBody ContactInfoEntity contactInfoEntity, @PathVariable("userName") String userName)
     {
         return userService.addContactInfo(contactInfoEntity, userName);
     }
 
-    @RequestMapping(value = "/subscribe", method = RequestMethod.POST)
-    public SubscriberEntity subscribe(@RequestBody SubscriberEntity subscriberEntity) throws InterruptedException
-    {
-
-        return subscriberService.subscribe(subscriberEntity);
-    }
 
     @RequestMapping(value = "/add-project", method = RequestMethod.POST)
     public ProjectDetailsEntity subscribe(@RequestBody ProjectDetailsEntity projectDetailsEntity) throws InterruptedException

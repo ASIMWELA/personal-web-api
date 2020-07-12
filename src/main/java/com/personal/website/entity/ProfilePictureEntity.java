@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
@@ -20,7 +18,7 @@ import javax.persistence.*;
 public class ProfilePictureEntity
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     @Column(name="profile_id", length = 11)
     private Long id;
@@ -35,10 +33,12 @@ public class ProfilePictureEntity
 
     @Lob
     @Column(name="image_data", length = 1000)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private byte[] data;
 
     @JsonIgnore
     @OneToOne(mappedBy = "profilePicture")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private UserEntity user;
 
 }

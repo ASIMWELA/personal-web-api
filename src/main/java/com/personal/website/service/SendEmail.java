@@ -1,7 +1,8 @@
 package com.personal.website.service;
 
 import com.personal.website.entity.ProjectDetailsEntity;
-import com.personal.website.entity.SubscriberEntity;
+import com.personal.website.entity.UserEntity;
+import com.personal.website.model.ERole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
@@ -28,20 +29,19 @@ public class SendEmail
 
     //send email asynchronously to the subscriberEntity
     @Async
-    public void sendSuccessEmail(SubscriberEntity subscriberEntity) throws MailException, InterruptedException
+    public void sendSuccessEmail(UserEntity userEntity) throws MailException, InterruptedException
     {
         Thread.sleep(10000);
-
         SimpleMailMessage mail = new SimpleMailMessage();
-        mail.setTo(subscriberEntity.getEmail());
+        mail.setTo(userEntity.getEmail());
         mail.setFrom(emailSender);
         mail.setSubject("Successful subscription");
-        mail.setText("Thanks for subscribing to my services " + subscriberEntity.getFirstName() +". More services awaits you. Go and log in now");
+        mail.setText("Thanks for subscribing to my services " + userEntity.getUserName() +". More services awaits you. Go and log in now");
         javaMailSender.send(mail);
     }
 
     @Async
-    public void sendProjectAddedEmail(List<SubscriberEntity> subscriberEntity, ProjectDetailsEntity projectDetailsEntity) throws MailException, InterruptedException
+    public void sendProjectAddedEmail(List<UserEntity> subscriberEntity, ProjectDetailsEntity projectDetailsEntity) throws MailException, InterruptedException
     {
         Thread.sleep(10000);
 
@@ -49,13 +49,18 @@ public class SendEmail
         String projectDetails = "\nProject Details\nName :"+projectDetailsEntity.getName()+"\nDetails: "+projectDetailsEntity.getDescription()+
                                 "\nLocation link: "+projectDetailsEntity.getLocationLink();
 
+        //send only to subscribers since they only have a single role as user
         subscriberEntity.forEach(subscriber->{
-            SimpleMailMessage mail = new SimpleMailMessage();
-            mail.setTo(subscriber.getEmail());
-            mail.setFrom(emailSender);
-            mail.setSubject("New Project Added");
-            mail.setText("Hie "+ subscriber.getFirstName()+" "+emailSender+" has added a new project\n"+projectDetails);
-            javaMailSender.send(mail);
+                if(subscriber.getRoles().size()==1)
+                {
+                    SimpleMailMessage mail = new SimpleMailMessage();
+                    mail.setTo(subscriber.getEmail());
+                    mail.setFrom(emailSender);
+                    mail.setSubject("New Project Added");
+                    mail.setText("Hie "+ subscriber.getUserName()+" "+emailSender+" has added a new project\n"+projectDetails);
+                    javaMailSender.send(mail);
+                }
+
         });
 
     }

@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import javax.validation.constraints.AssertFalse;
-import java.util.List;
 
 @Entity
 @Table(name="project_details")
@@ -20,7 +18,7 @@ import java.util.List;
 public class ProjectDetailsEntity
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     @Column(name="id")
     private Long id;

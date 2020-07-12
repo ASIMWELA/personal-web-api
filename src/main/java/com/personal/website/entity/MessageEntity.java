@@ -1,6 +1,6 @@
 package com.personal.website.entity;
 
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
@@ -9,44 +9,34 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name="contact_info")
+@Table
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Data
-public class ContactInfoEntity
+@Builder
+public class MessageEntity
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="contact_info_id")
+    @Column(name="message_id")
     @JsonIgnore
     private Long id;
-
-    @Column(name="phone_number",unique=true, length = 20)
+    @Column(name="sender")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String phoneNumber;
-
-    @Column(name="post_office_box")
+    private String sender;
+    @Column(name="receiver")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String postOfficeBox;
-
-    @Column(name="physical_address")
+    private String receiver;
+    @Column(name="type")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String physicalAddress;
-
-    @Column(name="city")
+    private String type;
+    @Column(name="content")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String city;
-
-    @Column(name="country")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String country;
-
-    @JsonIgnore
-    @OneToOne(mappedBy = "contactInfo")
-    private UserEntity user;
-
-
+    private String content;
+    @Column(name="created_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "hh:mm")
+    private LocalDateTime createdAt;
 }

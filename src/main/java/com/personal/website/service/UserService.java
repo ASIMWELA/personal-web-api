@@ -2,13 +2,26 @@ package com.personal.website.service;
 
 import com.personal.website.entity.ContactInfoEntity;
 import com.personal.website.entity.ProfilePictureEntity;
+import com.personal.website.entity.RoleEntinty;
 import com.personal.website.entity.UserEntity;
 import com.personal.website.exception.EntityAlreadyExistException;
 import com.personal.website.exception.EntityNotFoundException;
+import com.personal.website.model.ERole;
+import com.personal.website.payload.SignUpRequest;
+import com.personal.website.repository.RoleRepository;
 import com.personal.website.repository.UserRepository;
+import com.personal.website.utils.UidGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class UserService
@@ -20,15 +33,80 @@ public class UserService
     private ProfilePictureService profilePictureService;
 
     @Autowired
+    PasswordEncoder encoder;
+
+    @Autowired
     private ContactInfoService contactInfoService;
 
-    public UserEntity saveUser(UserEntity user)
+    @Autowired
+    private SendEmail sendEmail;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    public UserEntity saveAdmin(@Valid @RequestBody SignUpRequest signUpRequest)
     {
-        if(userRepository.existsByUserNameOrEmail(user.getUserName(), user.getEmail()))
-            throw new EntityAlreadyExistException("User Name or Email already taken. Try different one");
+        if(userRepository.existsByUserName(signUpRequest.getUserName()))
+        throw new EntityAlreadyExistException("User Name  already taken. Try different one");
+
+
+        if(userRepository.existsByEmail(signUpRequest.getEmail()))
+            throw new EntityAlreadyExistException("Email already taken. Try different one");
+
+        UserEntity user = new UserEntity(UidGenerator.generateRandomString(15),
+                                        signUpRequest.getFirstName(),
+                                        signUpRequest.getLastName(),
+                                        signUpRequest.getUserName(),
+                                        signUpRequest.getEmail(),
+                                        signUpRequest.getPassword(),
+                                        signUpRequest.getSex());
+
+        user.setPassword(encoder.encode(user.getPassword()));
+
+        RoleEntinty userRole = roleRepository.findByName(ERole.ROLE_USER).orElseThrow(
+                ()->new EntityNotFoundException("No role found")
+        );
+        RoleEntinty adminRole = roleRepository.findByName(ERole.ROLE_ADMIN).orElseThrow(
+                ()->new EntityNotFoundException("No role found")
+        );
+
+        List<RoleEntinty> roles = new ArrayList<>();
+        roles.add(userRole);
+        roles.add(adminRole);
+
+        user.setRoles(roles);
 
         return userRepository.save(user);
     }
+
+    public UserEntity saveSubscriber(@Valid @RequestBody SignUpRequest signUpRequest) throws InterruptedException
+    {
+
+        if(userRepository.existsByUserName(signUpRequest.getUserName()))
+            throw new EntityAlreadyExistException("User Name  already taken. Try different one");
+
+
+        if(userRepository.existsByEmail(signUpRequest.getEmail()))
+            throw new EntityAlreadyExistException("Email already taken. Try different one");
+
+        //allowing subscribers to have only user roles
+           RoleEntinty userRole = roleRepository.findByName(ERole.ROLE_USER).orElseThrow(
+                   ()->new EntityNotFoundException("No role found")
+           );
+
+           UserEntity user = new UserEntity(UidGenerator.generateRandomString(15),signUpRequest.getUserName(),
+                                            signUpRequest.getEmail(),
+                                            signUpRequest.getPassword());
+
+           user.setRoles(Collections.singletonList(userRole));
+
+           user.setPassword(encoder.encode(user.getPassword()));
+           userRepository.save(user);
+           sendEmail.sendSuccessEmail(user);
+
+           return user;
+    }
+
 
     public UserEntity updateProfilePicture(MultipartFile file,String userName)
     {

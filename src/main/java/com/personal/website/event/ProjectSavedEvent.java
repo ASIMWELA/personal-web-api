@@ -3,7 +3,8 @@ package com.personal.website.event;
 import com.personal.website.entity.ProjectDetailsEntity;
 import org.springframework.context.ApplicationEvent;
 
-public class ProjectSavedEvent extends ApplicationEvent {
+public class ProjectSavedEvent extends ApplicationEvent
+{
     private ProjectDetailsEntity projectDetailsEntity;
 
 

@@ -1,10 +1,10 @@
 package com.personal.website.repository;
 
-import com.personal.website.entity.ContactInfoEntity;
+import com.personal.website.entity.MessageEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ContactInfoRepository extends JpaRepository<ContactInfoEntity, Long>
+public interface MessageRepository extends JpaRepository<MessageEntity, Long>
 {
 }
