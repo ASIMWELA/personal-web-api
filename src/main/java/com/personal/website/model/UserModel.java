@@ -2,8 +2,7 @@ package com.personal.website.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.personal.website.controller.ProjectController;
-import com.personal.website.entity.RoleEntinty;
-import com.personal.website.entity.UserEntity;
+import com.personal.website.entity.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -40,7 +39,13 @@ public class UserModel extends RepresentationModel<UserModel>
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String sex;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    private ContactInfoEntity contactInfo;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<ExperienceEntity> experienceEntity;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<RoleEntinty> roles;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private ProfilePictureEntity profilePicture;
 
     @JsonIgnore
     private String password;
@@ -55,6 +60,9 @@ public class UserModel extends RepresentationModel<UserModel>
                                 .sex(entity.getSex())
                                 .roles(entity.getRoles())
                                 .uid(entity.getUid())
+                                .contactInfo(entity.getContactInfo())
+                                .experienceEntity(entity.getExperience())
+                                .profilePicture(entity.getProfilePicture())
                                 .build();
 
         if(entity.getRoles().size()>1){

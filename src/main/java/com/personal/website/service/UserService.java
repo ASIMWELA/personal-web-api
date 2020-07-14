@@ -1,13 +1,11 @@
 package com.personal.website.service;
 
-import com.personal.website.entity.ContactInfoEntity;
-import com.personal.website.entity.ProfilePictureEntity;
-import com.personal.website.entity.RoleEntinty;
-import com.personal.website.entity.UserEntity;
+import com.personal.website.entity.*;
 import com.personal.website.exception.EntityAlreadyExistException;
 import com.personal.website.exception.EntityNotFoundException;
 import com.personal.website.model.ERole;
 import com.personal.website.payload.SignUpRequest;
+import com.personal.website.repository.ExperienceRepository;
 import com.personal.website.repository.RoleRepository;
 import com.personal.website.repository.UserRepository;
 import com.personal.website.utils.UidGenerator;
@@ -42,6 +40,9 @@ public class UserService
     private SendEmail sendEmail;
 
     @Autowired
+    private ExperienceRepository experienceRepository;
+
+    @Autowired
     private RoleRepository roleRepository;
 
     public UserEntity saveAdmin(@Valid @RequestBody SignUpRequest signUpRequest)
@@ -71,6 +72,7 @@ public class UserService
         );
 
         List<RoleEntinty> roles = new ArrayList<>();
+
         roles.add(userRole);
         roles.add(adminRole);
 
@@ -108,7 +110,7 @@ public class UserService
     }
 
 
-    public UserEntity updateProfilePicture(MultipartFile file,String userName)
+    public ProfilePictureEntity updateProfilePicture(MultipartFile file,String userName)
     {
         UserEntity user= userRepository
                                         .findByUserName(userName)
@@ -117,8 +119,9 @@ public class UserService
 
         profile.setUser(user);
         user.setProfilePicture(profile);
+        userRepository.save(user);
 
-        return userRepository.save(user);
+        return profile;
     }
 
     public UserEntity addContactInfo(ContactInfoEntity contactInfoEntity, String userName)
@@ -129,6 +132,23 @@ public class UserService
         contactInfoEntity.setUser(user);
         user.setContactInfo(contactInfoEntity);
         contactInfoService.save(contactInfoEntity);
+
+        return userRepository.save(user);
+    }
+
+    public UserEntity addExperience(ExperienceEntity experienceEntity, String name)
+    {
+        UserEntity user = userRepository.findByUserName(name)
+                .orElseThrow(()->new EntityNotFoundException("No user with username " + name));
+
+        if(experienceRepository.existsByName(experienceEntity.getName()))
+            throw new EntityAlreadyExistException("Experience name already exist. Try a different one");
+
+        List<ExperienceEntity> experiences = user.getExperience();
+        experienceEntity.setUser(user);
+        experiences.add(experienceEntity);
+        user.setExperience(experiences);
+        experienceRepository.save(experienceEntity);
 
         return userRepository.save(user);
     }

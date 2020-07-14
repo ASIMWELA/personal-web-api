@@ -1,12 +1,11 @@
 package com.personal.website.controller;
 
 import com.personal.website.assembler.UserAssembler;
-import com.personal.website.entity.ContactInfoEntity;
-import com.personal.website.entity.ProjectDetailsEntity;
-import com.personal.website.entity.UserEntity;
+import com.personal.website.entity.*;
 import com.personal.website.exception.EntityNotFoundException;
 import com.personal.website.model.UserModel;
 import com.personal.website.payload.SignUpRequest;
+import com.personal.website.repository.ExperienceRepository;
 import com.personal.website.repository.UserRepository;
 import com.personal.website.service.ProfilePictureService;
 import com.personal.website.service.ProjectDetailsService;
@@ -34,6 +33,9 @@ public class UserController
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private ExperienceRepository experienceRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -79,7 +81,7 @@ public class UserController
     }
 
     @RequestMapping(value="/upload-profile/{userName}", method = RequestMethod.PUT)
-    public UserEntity upload(@RequestParam("profile")MultipartFile file, @PathVariable("userName") String userName)
+    public ProfilePictureEntity upload(@RequestParam("profile")MultipartFile file, @PathVariable("userName") String userName)
     {
        return userService.updateProfilePicture(file, userName);
     }
@@ -90,6 +92,13 @@ public class UserController
     public UserEntity addContactInfo(@RequestBody ContactInfoEntity contactInfoEntity, @PathVariable("userName") String userName)
     {
         return userService.addContactInfo(contactInfoEntity, userName);
+    }
+    @RequestMapping(value="/add-experience/{userName}",
+            method = RequestMethod.PUT,
+            produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public UserEntity addExperience(@RequestBody ExperienceEntity experienceEntity, @PathVariable("userName") String userName)
+    {
+        return userService.addExperience(experienceEntity, userName);
     }
 
     @RequestMapping(value = "/add-project", method = RequestMethod.POST)

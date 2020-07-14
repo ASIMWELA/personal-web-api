@@ -2,6 +2,7 @@ package com.personal.website.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.personal.website.repository.ExperienceRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -82,19 +83,22 @@ public class UserEntity
     @JoinColumn(name="contact_info_id", referencedColumnName = "contact_info_id")
     private ContactInfoEntity contactInfo;
 
+
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<ExperienceEntity> experience;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JoinTable(
             name="user_roles",
             joinColumns = @JoinColumn(name="user_id"),
             inverseJoinColumns = @JoinColumn(name="role_id"))
-
     private List<RoleEntinty> roles ;
     @OneToOne(cascade = CascadeType.ALL)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JoinColumn(name="profile_id", referencedColumnName = "profile_id")
     private ProfilePictureEntity profilePicture;
-
 
 
 }
