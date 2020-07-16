@@ -29,7 +29,7 @@ public class UserEntity
     @Column(name="id", nullable = false, length = 11)
     private Long id;
 
-    @Column(length = 15, unique = true)
+    @Column(name="uid", length = 15, unique = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String uid;
 
@@ -51,7 +51,6 @@ public class UserEntity
     private String email;
 
     @Column(name="password")
-    @Pattern(regexp = "(?-i)(?=^.{5,}$)((?!.*\\s)(?=.*[A-Z])(?=.*[a-z]))((?=(.*\\d){1,})|(?=(.*\\W){1,}))^.*$")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonIgnore
     private String password;
@@ -87,6 +86,18 @@ public class UserEntity
     @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<ExperienceEntity> experience;
+
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<EmploymentEntity> employment;
+
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<SkillEntity> skills;
+
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private List<EducationEntity> education;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JsonInclude(JsonInclude.Include.NON_NULL)

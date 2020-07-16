@@ -6,11 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import org.springframework.hateoas.RepresentationModel;
 
-import javax.persistence.Column;
-
 @Data
 @Builder
-public class ProjectModel extends RepresentationModel<ProjectModel>
+public class Project extends RepresentationModel<Project>
 {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -24,10 +22,10 @@ public class ProjectModel extends RepresentationModel<ProjectModel>
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String locationLink;
 
-    public static ProjectModel build(ProjectDetailsEntity entity)
+    public static Project build(ProjectDetailsEntity entity)
     {
         return
-                ProjectModel.builder()
+                Project.builder()
                             .locationLink(entity.getLocationLink())
                             .collaborators(entity.getCollaborators())
                             .role(entity.getRole())

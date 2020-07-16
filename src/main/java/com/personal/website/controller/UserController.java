@@ -3,12 +3,12 @@ package com.personal.website.controller;
 import com.personal.website.assembler.UserAssembler;
 import com.personal.website.entity.*;
 import com.personal.website.exception.EntityNotFoundException;
-import com.personal.website.model.UserModel;
-import com.personal.website.payload.SignUpRequest;
+import com.personal.website.model.User;
+import com.personal.website.payload.ApiResponse;
 import com.personal.website.repository.ExperienceRepository;
+import com.personal.website.repository.SkillsRepository;
 import com.personal.website.repository.UserRepository;
 import com.personal.website.service.ProfilePictureService;
-import com.personal.website.service.ProjectDetailsService;
 import com.personal.website.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
@@ -25,7 +25,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1")
 public class UserController
 {
     @Autowired
@@ -43,14 +43,14 @@ public class UserController
     @Autowired
     private UserAssembler userAssembler;
 
-
     @Autowired
-    private ProjectDetailsService projectDetailsService;
+    private SkillsRepository skillsRepository;
 
     @RequestMapping(
+            value="/users",
             method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<CollectionModel<UserModel>> getAllUsers()
+    public ResponseEntity<CollectionModel<User>> getAllUsers()
     {
         List<UserEntity> users = userRepository.findAll();
 
@@ -59,53 +59,109 @@ public class UserController
     }
 
     @RequestMapping(
-            value = "/{uid}",
+            value = "/users/{uid}",
             method = RequestMethod.GET,
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public UserModel getUser(@PathVariable("uid") String iud)
+            produces = {
+                            MediaType.APPLICATION_JSON_VALUE,
+                            MediaType.APPLICATION_XML_VALUE}
+                    )
+    @ResponseStatus(HttpStatus.OK)
+    public User getUser(@PathVariable("uid") String iud)
     {
-       UserModel userModel= UserModel.build(userRepository.findByUid(iud).orElseThrow(() -> new EntityNotFoundException("NO User with id " + iud)))
+       User user = User.build(userRepository.findByUid(iud).orElseThrow(() -> new EntityNotFoundException("NO User with id " + iud)))
                             .add(linkTo(methodOn(UserController.class)
                                     .getAllUsers()).withRel("users"));
 
-       return userModel;
+       return user;
     }
 
     @RequestMapping(
-            value = "/save",
-            method = RequestMethod.POST,
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public UserEntity saveUser(@RequestBody SignUpRequest signUpRequest)
-    {
-        return userService.saveAdmin(signUpRequest);
-    }
-
-    @RequestMapping(value="/upload-profile/{userName}", method = RequestMethod.PUT)
+            value="/profile/{userName}",
+            method = RequestMethod.PUT)
+    @PreAuthorize("hasRole('ADMIN')")
     public ProfilePictureEntity upload(@RequestParam("profile")MultipartFile file, @PathVariable("userName") String userName)
     {
        return userService.updateProfilePicture(file, userName);
     }
 
-    @RequestMapping(value="/contact-info/{userName}",
+    @RequestMapping(
+            value="/contact-info/{userName}",
             method = RequestMethod.PUT,
-            produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public UserEntity addContactInfo(@RequestBody ContactInfoEntity contactInfoEntity, @PathVariable("userName") String userName)
+            produces = {
+                            MediaType.APPLICATION_JSON_VALUE,
+                            MediaType.APPLICATION_XML_VALUE
+                        }
+                     )
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> addContactInfo(@RequestBody ContactInfoEntity contactInfoEntity, @PathVariable("userName") String userName)
     {
-        return userService.addContactInfo(contactInfoEntity, userName);
+        userService.addContactInfo(contactInfoEntity, userName);
+
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "contact details successfully added" ),HttpStatus.OK);
+
     }
-    @RequestMapping(value="/add-experience/{userName}",
+    @RequestMapping(
+            value="/experience/{userName}",
             method = RequestMethod.PUT,
-            produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public UserEntity addExperience(@RequestBody ExperienceEntity experienceEntity, @PathVariable("userName") String userName)
+            produces = {
+                            MediaType.APPLICATION_JSON_VALUE,
+                            MediaType.APPLICATION_XML_VALUE
+                        }
+                    )
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> addExperience(@RequestBody ExperienceEntity experienceEntity, @PathVariable("userName") String userName)
     {
-        return userService.addExperience(experienceEntity, userName);
+        userService.addExperience(experienceEntity, userName);
+
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "Experience details successfully added" ),HttpStatus.OK);
+
     }
 
-    @RequestMapping(value = "/add-project", method = RequestMethod.POST)
-    public ProjectDetailsEntity subscribe(@RequestBody ProjectDetailsEntity projectDetailsEntity) throws InterruptedException
+    @RequestMapping(value="/employment/{userName}",
+            method = RequestMethod.PUT,
+            produces = {
+                            MediaType.APPLICATION_JSON_VALUE,
+                            MediaType.APPLICATION_XML_VALUE
+                        }
+                     )
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> addEmployment(@RequestBody EmploymentEntity employmentEntity, @PathVariable("userName") String userName)
     {
+        userService.addEmployment(employmentEntity, userName);
 
-        return projectDetailsService.saveProject(projectDetailsEntity);
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "Employment details successfully added" ),HttpStatus.OK);
+    }
+
+    @RequestMapping(
+            value="/skill/{userName}",
+            method = RequestMethod.PUT,
+            produces = {
+                            MediaType.APPLICATION_JSON_VALUE,
+                            MediaType.APPLICATION_XML_VALUE
+                        }
+                      )
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> addSkills(@RequestBody SkillEntity skillEntity, @PathVariable("userName") String userName)
+    {
+        userService.addSkill(skillEntity, userName);
+
+         return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "Skills details successfully added" ),HttpStatus.OK);
+    }
+
+    @RequestMapping(
+            value="/education/{userName}",
+            method = RequestMethod.PUT,
+            produces = {
+                            MediaType.APPLICATION_JSON_VALUE,
+                            MediaType.APPLICATION_XML_VALUE}
+                    )
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> addEducation(@RequestBody EducationEntity educationEntity, @PathVariable("userName") String userName)
+    {
+        userService.addEducation(educationEntity, userName);
+
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "Education details successfully added" ),HttpStatus.OK);
+
     }
 
 }

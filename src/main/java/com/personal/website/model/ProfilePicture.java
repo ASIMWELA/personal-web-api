@@ -13,9 +13,9 @@ import org.springframework.hateoas.RepresentationModel;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
 @Data
-public class ProfilePictureModel extends RepresentationModel<ProfilePictureModel>
+public class ProfilePicture extends RepresentationModel<ProfilePicture>
 {
-    public ProfilePictureModel(ProfilePictureEntity profilePictureEntity)
+    public ProfilePicture(ProfilePictureEntity profilePictureEntity)
     {
 
     }

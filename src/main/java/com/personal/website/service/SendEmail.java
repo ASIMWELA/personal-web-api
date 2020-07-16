@@ -3,6 +3,7 @@ package com.personal.website.service;
 import com.personal.website.entity.ProjectDetailsEntity;
 import com.personal.website.entity.UserEntity;
 import com.personal.website.model.ERole;
+import com.personal.website.utils.CheckRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
@@ -51,7 +52,7 @@ public class SendEmail
 
         //send only to subscribers since they only have a single role as user
         subscriberEntity.forEach(subscriber->{
-                if(subscriber.getRoles().size()==1)
+                if(!(CheckRole.isAdmin(subscriber.getRoles())))
                 {
                     SimpleMailMessage mail = new SimpleMailMessage();
                     mail.setTo(subscriber.getEmail());

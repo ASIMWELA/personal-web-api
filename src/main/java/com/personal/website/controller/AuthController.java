@@ -2,7 +2,6 @@ package com.personal.website.controller;
 
 import com.personal.website.entity.PasswordResetToken;
 import com.personal.website.entity.UserEntity;
-import com.personal.website.exception.EntityAlreadyExistException;
 import com.personal.website.exception.EntityNotFoundException;
 import com.personal.website.exception.TokenExpiredException;
 import com.personal.website.payload.ApiResponse;
@@ -13,7 +12,6 @@ import com.personal.website.repository.PasswordResetTokenRepository;
 import com.personal.website.repository.RoleRepository;
 import com.personal.website.repository.UserRepository;
 import com.personal.website.security.JwtTokenProvider;
-import com.personal.website.service.UserDetailsImpl;
 import com.personal.website.service.UserService;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,13 +32,12 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/auth")
-public class AuthController {
+@RequestMapping("/api/v1/auth")
+public class AuthController
+{
     @Autowired
     AuthenticationManager authenticationManager;
 
@@ -84,27 +81,31 @@ public class AuthController {
     @RequestMapping(
             value="/signup-admin",
             method = RequestMethod.POST,
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
-            )
+            produces = {
+                            MediaType.APPLICATION_JSON_VALUE,
+                            MediaType.APPLICATION_XML_VALUE}
+                    )
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse> registerAdmin(@Valid @RequestBody SignUpRequest entity) throws InterruptedException
     {
         userService.saveAdmin(entity);
 
-        return new ResponseEntity<ApiResponse>(new ApiResponse(true, HttpStatus.CREATED, HttpStatus.CREATED.value(),"registered successfully"), HttpStatus.CREATED);
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.CREATED, HttpStatus.CREATED.value(),"registered successfully"), HttpStatus.CREATED);
 
     }
     @RequestMapping(
             value="/signup-subscriber",
             method = RequestMethod.POST,
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}
+            produces = {
+                            MediaType.APPLICATION_JSON_VALUE,
+                            MediaType.APPLICATION_XML_VALUE}
     )
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse> registerSubscriber(@Valid @RequestBody SignUpRequest entity) throws InterruptedException
     {
         userService.saveSubscriber(entity);
 
-        return new ResponseEntity<ApiResponse>(new ApiResponse(true, HttpStatus.CREATED, HttpStatus.CREATED.value(),"registered successfully"), HttpStatus.CREATED);
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.CREATED, HttpStatus.CREATED.value(),"registered successfully"), HttpStatus.CREATED);
 
     }
 
@@ -121,13 +122,16 @@ public class AuthController {
 
         PasswordResetToken token = new PasswordResetToken(UUID.randomUUID().toString());
         token.setUser(user);
+        //token expire after 60 minutes
         token.setExpiryDate(60);
         passwordResetTokenRepository.save(token);
 
+
+        //get application url
         String url = request.getScheme() + "://" +
                      request.getServerName() + ":" +
                      request.getServerPort()+
-                     "/api/auth/reset-password?token="+token.getToken();
+                     "/api/v1/auth/reset-password?token="+token.getToken();
 
         Thread.sleep(10000);
         SimpleMailMessage mail = new SimpleMailMessage();
@@ -136,8 +140,6 @@ public class AuthController {
         mail.setSubject("Password Reset");
         mail.setText("Click on the link below to complete the reset process\n\n"+url);
         javaMailSender.send(mail);
-
-        //if(javaMailSender)
 
         return ResponseEntity.ok();
     }
@@ -151,13 +153,12 @@ public class AuthController {
         String requestToken = ServletRequestUtils.getStringParameter(request,"token");
         String password = ServletRequestUtils.getStringParameter(request,"password");
 
-
         PasswordResetToken token =passwordResetTokenRepository.findByToken(requestToken).orElseThrow(
                 ()->new EntityNotFoundException("Token: " + requestToken+" not found")
         );
 
         if(token.isExpired())
-            throw new TokenExpiredException("Token expired");
+            throw new TokenExpiredException("Link broken. Token expired");
 
         UserEntity user = token.getUser();
         user.setPassword(passwordEncoder.encode(password));

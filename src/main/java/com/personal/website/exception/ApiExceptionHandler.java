@@ -37,10 +37,28 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler
         return buildResponseEntity(apiError);
     }
 
-    @ExceptionHandler(FileStorageException.class)
+    @ExceptionHandler({FileStorageException.class})
     protected ResponseEntity<Object> handleFileStorageException(FileStorageException ex)
     {
         ApiException apiError = new ApiException(BAD_REQUEST);
+        apiError.setMessage(ex.getMessage());
+        apiError.setCode(apiError.getStatus().value());
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(OperationNotAllowedException.class)
+    protected ResponseEntity<Object> handleOperationNotAllowedException(OperationNotAllowedException ex)
+    {
+        ApiException apiError = new ApiException(BAD_REQUEST);
+        apiError.setMessage(ex.getMessage());
+        apiError.setCode(apiError.getStatus().value());
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    protected ResponseEntity<Object> handleUnAuthorizedException(TokenExpiredException ex)
+    {
+        ApiException apiError = new ApiException(FORBIDDEN);
         apiError.setMessage(ex.getMessage());
         apiError.setCode(apiError.getStatus().value());
         return buildResponseEntity(apiError);

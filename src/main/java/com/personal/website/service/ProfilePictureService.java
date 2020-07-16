@@ -2,7 +2,6 @@ package com.personal.website.service;
 
 import com.personal.website.entity.ProfilePictureEntity;
 import com.personal.website.exception.FileStorageException;
-import com.personal.website.model.ProfilePictureModel;
 import com.personal.website.repository.ProfilePictureRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

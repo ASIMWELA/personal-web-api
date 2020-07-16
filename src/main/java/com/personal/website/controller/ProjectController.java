@@ -2,20 +2,17 @@ package com.personal.website.controller;
 
 import com.personal.website.assembler.ProjectAssembler;
 import com.personal.website.entity.ProjectDetailsEntity;
-import com.personal.website.entity.UserEntity;
 import com.personal.website.exception.EntityNotFoundException;
-import com.personal.website.model.ProjectModel;
-import com.personal.website.model.UserModel;
+import com.personal.website.model.Project;
 import com.personal.website.repository.ProjectDetailsRepository;
+import com.personal.website.service.ProjectDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,7 +20,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
-@RequestMapping("/projects")
+@RequestMapping("/api/v1/projects")
 public class ProjectController {
     @Autowired
     private ProjectDetailsRepository projectDetailsRepository;
@@ -31,10 +28,14 @@ public class ProjectController {
     @Autowired
     private ProjectAssembler projectAssembler;
 
+    @Autowired
+    private ProjectDetailsService projectDetailsService;
+
+
     @RequestMapping(
             method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<CollectionModel<ProjectModel>> getAllProjects() {
+    public ResponseEntity<CollectionModel<Project>> getAllProjects() {
         List<ProjectDetailsEntity> projects = projectDetailsRepository.findAll();
 
         return new ResponseEntity<>(projectAssembler.toCollectionModel(projects), HttpStatus.OK);
@@ -45,14 +46,23 @@ public class ProjectController {
             value = "/{projectName}",
             method = RequestMethod.GET,
             produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ProjectModel getProject(@PathVariable("projectName") String projectName) {
+    public Project getProject(@PathVariable("projectName") String projectName) {
 
            ProjectDetailsEntity entity = projectDetailsRepository.findByName(projectName).orElseThrow(() -> new EntityNotFoundException("NO User with id " + projectName));
 
-           ProjectModel model = ProjectModel.build(entity);
+           Project model = Project.build(entity);
            model.add(linkTo(methodOn(ProjectController.class)
                         .getAllProjects()).withRel("projects"));
 
         return model;
     }
+
+    @RequestMapping(method = RequestMethod.POST)
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProjectDetailsEntity subscribe(@RequestBody ProjectDetailsEntity projectDetailsEntity) throws InterruptedException
+    {
+
+        return projectDetailsService.saveProject(projectDetailsEntity);
+    }
+
 }

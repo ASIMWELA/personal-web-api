@@ -3,7 +3,8 @@ package com.personal.website.assembler;
 import com.personal.website.controller.ProjectController;
 import com.personal.website.controller.UserController;
 import com.personal.website.entity.UserEntity;
-import com.personal.website.model.UserModel;
+import com.personal.website.model.User;
+import com.personal.website.utils.CheckRole;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;
@@ -12,13 +13,13 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Component
-public class UserAssembler implements RepresentationModelAssembler<UserEntity, UserModel>
+public class UserAssembler implements RepresentationModelAssembler<UserEntity, User>
 {
     @Override
-    public UserModel toModel(UserEntity entity)
+    public User toModel(UserEntity entity)
     {
 
-       UserModel model =  UserModel.builder()
+       User model =  User.builder()
                                         .email(entity.getEmail())
                                         .userName(entity.getUserName())
                                         .uid(entity.getUid())
@@ -27,7 +28,7 @@ public class UserAssembler implements RepresentationModelAssembler<UserEntity, U
                                                     methodOn(UserController.class)
                                                             .getUser(entity.getUid()))
                                                             .withSelfRel());
-       if(entity.getRoles().size()>1){
+       if(CheckRole.isAdmin(entity.getRoles())){
            model.add(linkTo(methodOn(ProjectController.class)
                    .getAllProjects()).withRel("projects"));
        }
@@ -36,9 +37,9 @@ public class UserAssembler implements RepresentationModelAssembler<UserEntity, U
     }
 
     @Override
-    public CollectionModel<UserModel> toCollectionModel(Iterable<? extends UserEntity> entities) {
-        CollectionModel<UserModel> userModels = RepresentationModelAssembler.super.toCollectionModel(entities);
-        userModels.add(linkTo(methodOn(UserController.class).getAllUsers()).withSelfRel());
-        return userModels;
+    public CollectionModel<User> toCollectionModel(Iterable<? extends UserEntity> entities) {
+        CollectionModel<User> users = RepresentationModelAssembler.super.toCollectionModel(entities);
+        users.add(linkTo(methodOn(UserController.class).getAllUsers()).withSelfRel());
+        return users;
     }
 }

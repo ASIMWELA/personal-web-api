@@ -7,6 +7,7 @@ import com.personal.website.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -57,11 +58,40 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
     @Override
     protected void configure(HttpSecurity http) throws Exception
     {
-        http.cors().and().csrf().disable()
-                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeRequests().antMatchers("/api/auth/**","/users/**","/projects/**").permitAll()
-                .antMatchers("/api/test/**").permitAll()
+        http.cors()
+            .and().csrf().disable()
+                .exceptionHandling()
+                .authenticationEntryPoint(unauthorizedHandler)
+            .and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+                .authorizeRequests()
+                    .antMatchers(HttpMethod.POST,
+             "/api/v1/auth/login",
+                        "/api/v1/auth/signup-subscriber",
+                        "/api/v1/auth/forgot-password",
+                        "/api/v1/auth/reset-password"
+                            )
+                            .permitAll()
+                    .antMatchers(HttpMethod.GET,
+                        "/api/v1/users",
+                                    "/api/v1/users/**",
+                                    "/api/v1/projects",
+                                    "/api/v1/projects/**")
+                             .permitAll()
+                    .antMatchers("/api/v1/auth/signup-admin")
+                              .hasRole("ADMIN")
+                    .antMatchers("/",
+                            "/favicon.ico",
+                            "/**/*.png",
+                            "/**/*.gif",
+                            "/**/*.svg",
+                            "/**/*.jpg",
+                            "/**/*.html",
+                            "/**/*.css",
+                            "/**/*.js")
+                                .permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
