@@ -6,6 +6,7 @@ import com.personal.website.entity.*;
 import com.personal.website.exception.EntityNotFoundException;
 import com.personal.website.model.User;
 import com.personal.website.payload.ApiResponse;
+import com.personal.website.payload.EmailMessage;
 import com.personal.website.payload.UpdateAdminRequest;
 import com.personal.website.repository.*;
 import com.personal.website.service.ChatMessageService;
@@ -13,12 +14,15 @@ import com.personal.website.service.ProfilePictureService;
 import com.personal.website.service.UserService;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -70,6 +74,12 @@ public class UserController
 
     @Autowired
     private EmploymentRepository employmentRepository;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Value("${app.emailOrigin}")
+    private String emailReceiver;
 
     @RequestMapping(
             value="/users",
@@ -499,5 +509,23 @@ public class UserController
         return ResponseEntity
                 .ok(chatMessageService.findById(id));
     }
+
+
+    //send email directly
+    @RequestMapping(
+            value = "/sendEmail",
+            method=RequestMethod.POST
+    )
+    public ResponseEntity<ApiResponse> sendEmail(@NotNull EmailMessage emailMessage)
+    {
+        SimpleMailMessage mail = new SimpleMailMessage();
+        mail.setTo(emailReceiver);
+        mail.setFrom(emailMessage.getSenderEmail());
+        mail.setSubject(emailMessage.getTitle());
+        mail.setText(emailMessage.getContent());
+        javaMailSender.send(mail);
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK, HttpStatus.OK.value(), "Experience deleted successfully"), HttpStatus.OK);
+    }
+
 
 }

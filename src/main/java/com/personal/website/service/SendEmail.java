@@ -17,6 +17,7 @@ import java.util.List;
 @Service
 public class SendEmail
 {
+    @Autowired
     private JavaMailSender javaMailSender;
 
     @Value("${app.emailOrigin}")
@@ -32,7 +33,7 @@ public class SendEmail
     @Async
     public void sendSuccessEmail(UserEntity userEntity) throws MailException, InterruptedException
     {
-        Thread.sleep(10000);
+       // Thread.sleep(10000);
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(userEntity.getEmail());
         mail.setFrom(emailSender);
