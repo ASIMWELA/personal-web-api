@@ -4,6 +4,7 @@ import com.personal.website.entity.PasswordResetToken;
 import com.personal.website.entity.UserEntity;
 import com.personal.website.exception.EntityNotFoundException;
 import com.personal.website.exception.TokenExpiredException;
+import com.personal.website.model.User;
 import com.personal.website.payload.ApiResponse;
 import com.personal.website.payload.LoginRequest;
 import com.personal.website.payload.LoginResponse;
@@ -21,21 +22,23 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.ServletRequestBindingException;
-import org.springframework.web.bind.ServletRequestUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.UUID;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @RestController
 @RequestMapping("/api/v1/auth")
+@CrossOrigin(origins="*")
 public class AuthController
 {
     @Autowired
@@ -75,7 +78,15 @@ public class AuthController
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-        return ResponseEntity.ok(new LoginResponse(jwt));
+        UserEntity entity =userRepository.findByUserName(jwtUtils.getUserNameFromJwtToken(jwt)).orElseThrow(
+                ()->new EntityNotFoundException("User not found with the name")
+        );
+        User userModel = User.build(entity);
+        userModel.add(linkTo(methodOn(UserController.class)
+                    .getAllUsers()).withRel("users"))
+                 .add(linkTo(
+                     methodOn(UserController.class).getUser(entity.getUid())).withSelfRel());
+        return ResponseEntity.ok(new LoginResponse(jwt,userModel));
     }
 
     @RequestMapping(
@@ -86,11 +97,12 @@ public class AuthController
                             MediaType.APPLICATION_XML_VALUE}
                     )
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<ApiResponse> registerAdmin(@Valid @RequestBody SignUpRequest entity) throws InterruptedException
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> registerAdmin(@RequestBody SignUpRequest entity) throws InterruptedException
     {
         userService.saveAdmin(entity);
 
-        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.CREATED, HttpStatus.CREATED.value(),"registered successfully"), HttpStatus.CREATED);
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.CREATED, HttpStatus.CREATED.value(),"Admin registered successfully"), HttpStatus.CREATED);
 
     }
     @RequestMapping(
@@ -112,9 +124,13 @@ public class AuthController
     @SneakyThrows
     @RequestMapping(
             value="/forgot-password",
-            method = RequestMethod.POST
+            method = RequestMethod.POST,
+            produces = {
+                    MediaType.APPLICATION_JSON_VALUE,
+                    MediaType.APPLICATION_XML_VALUE}
     )
-    public ResponseEntity.BodyBuilder forgotPassword(@RequestParam("email") String email, HttpServletRequest request)
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse> forgotPassword(@RequestParam("email") String email, @RequestParam("url")String clientLocation)
     {
         UserEntity user = userRepository.findByEmail(email).orElseThrow(
                 ()->new EntityNotFoundException("No user found with email "+ email)
@@ -128,32 +144,31 @@ public class AuthController
 
 
         //get application url
-        String url = request.getScheme() + "://" +
-                     request.getServerName() + ":" +
-                     request.getServerPort()+
-                     "/api/v1/auth/reset-password?token="+token.getToken();
+        String url = clientLocation+"/reset-password?token="+token.getToken();
 
-        Thread.sleep(10000);
+        //send email after 5 seconds to give time for smp server initialisation
+        Thread.sleep(5000);
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(user.getEmail());
         mail.setFrom(emailSender);
         mail.setSubject("Password Reset");
         mail.setText("Click on the link below to complete the reset process\n\n"+url);
         javaMailSender.send(mail);
+        return new ResponseEntity<>(new ApiResponse(HttpStatus.OK, HttpStatus.OK.value(),"Reset Link sent to your email. Complete process within 1 hour"), HttpStatus.OK);
 
-        return ResponseEntity.ok();
     }
 
     @RequestMapping(
             value="/reset-password",
-            method = RequestMethod.POST
+            method = RequestMethod.POST,
+            produces = {
+                    MediaType.APPLICATION_JSON_VALUE,
+                    MediaType.APPLICATION_XML_VALUE}
     )
-    public ResponseEntity.BodyBuilder resetPassword(HttpServletRequest request) throws ServletRequestBindingException
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<ApiResponse> resetPassword(@RequestParam("token") String requestToken, @RequestParam("password")String password)
     {
-        String requestToken = ServletRequestUtils.getStringParameter(request,"token");
-        String password = ServletRequestUtils.getStringParameter(request,"password");
-
-        PasswordResetToken token =passwordResetTokenRepository.findByToken(requestToken).orElseThrow(
+        PasswordResetToken token = passwordResetTokenRepository.findByToken(requestToken).orElseThrow(
                 ()->new EntityNotFoundException("Token: " + requestToken+" not found")
         );
 
@@ -163,9 +178,10 @@ public class AuthController
         UserEntity user = token.getUser();
         user.setPassword(passwordEncoder.encode(password));
         userRepository.save(user);
-
+        token.setUser(null);
         passwordResetTokenRepository.delete(token);
 
-        return ResponseEntity.ok();
+        return new ResponseEntity<>(new ApiResponse(HttpStatus.OK, HttpStatus.OK.value(),"Password Reset Successful"), HttpStatus.OK);
+
     }
 }

@@ -18,19 +18,38 @@ public class UserAssembler implements RepresentationModelAssembler<UserEntity, U
     @Override
     public User toModel(UserEntity entity)
     {
+        User model = null;
 
-       User model =  User.builder()
-                                        .email(entity.getEmail())
-                                        .userName(entity.getUserName())
-                                        .uid(entity.getUid())
-                                        .build()
-                                        .add(linkTo(
-                                                    methodOn(UserController.class)
-                                                            .getUser(entity.getUid()))
-                                                            .withSelfRel());
        if(CheckRole.isAdmin(entity.getRoles())){
-           model.add(linkTo(methodOn(ProjectController.class)
-                   .getAllProjects()).withRel("projects"));
+           model =  User.builder()
+                   .email(entity.getEmail())
+                   .firstName(entity.getFirstName())
+                   .age(entity.getAge())
+                   .sex(entity.getSex())
+                   .dateOfBirth(entity.getDateOfBirth())
+                   .lastName(entity.getLastName())
+                   .userName(entity.getUserName())
+                   .isOnline(entity.isOnline())
+                   .uid(entity.getUid())
+                   .build()
+                   .add(linkTo(
+                           methodOn(UserController.class)
+                                   .getUser(entity.getUid()))
+                           .withSelfRel())
+                   .add(linkTo(
+                           methodOn(ProjectController.class)
+                            .getAllProjects()).withRel("projects"));
+       }
+       else{
+           model = User.builder()
+                   .email(entity.getEmail())
+                   .userName(entity.getUserName())
+                   .isOnline(entity.isOnline())
+                   .uid(entity.getUid())
+                   .build().add(linkTo(
+                           methodOn(UserController.class)
+                                   .getUser(entity.getUid()))
+                           .withSelfRel());
        }
 
        return model;

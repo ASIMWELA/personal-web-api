@@ -7,11 +7,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.time.LocalDate;
 
-@Entity
+@Entity(name="experience")
 @Table(name="experience")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,7 +22,7 @@ import java.time.LocalDate;
 public class ExperienceEntity
 {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     @Column(name="id")
     private Long id;
@@ -34,14 +36,24 @@ public class ExperienceEntity
     @Column(name="years")
     private int years;
 
+    @Column(name="months")
+    private int months;
+
     public int getYears()
     {
         this.years = YearsCalculator.calculateYears(getBeganOn(), LocalDate.now());
         return this.years;
     }
 
-    @ManyToOne(targetEntity = UserEntity.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    public  int getMonths()
+    {
+        this.months = YearsCalculator.calculateMonths(getBeganOn(), LocalDate.now());
+        return this.months;
+    }
+
+    @ManyToOne(targetEntity = UserEntity.class, cascade = CascadeType.REMOVE)
     @JoinColumn(name="user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnore
     private UserEntity user;
 }

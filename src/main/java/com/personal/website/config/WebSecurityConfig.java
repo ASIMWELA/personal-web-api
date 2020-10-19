@@ -18,6 +18,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -40,6 +45,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
     public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception
     {
         authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource()
+    {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "DELETE", "PUT", "PATCH"));
+        configuration.setAllowedHeaders(Arrays.asList("X-Requested-With", "Origin", "Content-Type", "Accept", "Authorization"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
@@ -72,6 +90,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
                         "/api/v1/auth/signup-subscriber",
                         "/api/v1/auth/forgot-password",
                         "/api/v1/auth/reset-password"
+
                             )
                             .permitAll()
                     .antMatchers(HttpMethod.GET,
@@ -80,9 +99,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
                                     "/api/v1/projects",
                                     "/api/v1/projects/**")
                              .permitAll()
-                    .antMatchers("/api/v1/auth/signup-admin")
-                              .hasRole("ADMIN")
-                    .antMatchers("/",
+                .antMatchers("/",
                             "/favicon.ico",
                             "/**/*.png",
                             "/**/*.gif",
@@ -92,6 +109,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
                             "/**/*.css",
                             "/**/*.js")
                                 .permitAll()
+                .antMatchers("/app/**",
+                        "/queue/**",
+                        "/user/**",
+                        "/topic/**",
+                        "/ws/**")
+                .permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -19,6 +19,9 @@ public class ProjectAssembler implements RepresentationModelAssembler<ProjectDet
     {
         Project model = Project.builder().name(entity.getName())
                                     .description(entity.getDescription())
+                                    .locationLink(entity.getLocationLink())
+                                    .role(entity.getRole())
+                                    .collaborators(entity.getCollaborators())
                                     .build()
                                     .add(linkTo(
                                             methodOn(ProjectController.class)

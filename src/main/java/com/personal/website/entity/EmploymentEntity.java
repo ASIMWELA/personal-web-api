@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
-@Entity
+@Entity(name="employment_entity")
 @Table(name="employment_entity")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -36,7 +36,7 @@ public class EmploymentEntity
     private String [] accomplishments;
 
     @JsonIgnore
-    @ManyToOne(targetEntity = UserEntity.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(targetEntity = UserEntity.class)
     @JoinColumn(name="user_id")
     private UserEntity user;
 

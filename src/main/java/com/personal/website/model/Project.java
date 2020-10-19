@@ -11,6 +11,7 @@ import org.springframework.hateoas.RepresentationModel;
 public class Project extends RepresentationModel<Project>
 {
 
+    //projects
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String name;
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -24,14 +25,30 @@ public class Project extends RepresentationModel<Project>
 
     public static Project build(ProjectDetailsEntity entity)
     {
-        return
-                Project.builder()
+
+        Project project = null;
+
+                if(entity.getCollaborators()==null)
+                {
+                    project = Project.builder()
+                            .locationLink(entity.getLocationLink())
+                            .role(entity.getRole())
+                            .description(entity.getDescription())
+                            .name(entity.getName())
+                            .build();
+                }
+                else{
+                  project=  Project.builder()
                             .locationLink(entity.getLocationLink())
                             .collaborators(entity.getCollaborators())
                             .role(entity.getRole())
                             .description(entity.getDescription())
                             .name(entity.getName())
                             .build();
+
+                }
+        return project;
+
     }
 
 }

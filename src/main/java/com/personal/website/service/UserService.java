@@ -9,14 +9,18 @@ import com.personal.website.payload.SignUpRequest;
 import com.personal.website.repository.*;
 import com.personal.website.utils.CheckRole;
 import com.personal.website.utils.UidGenerator;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -54,10 +58,10 @@ public class UserService
     @Autowired
     private SkillsRepository skillsRepository;
 
-    public UserEntity saveAdmin(@Valid @RequestBody SignUpRequest signUpRequest)
+    public UserEntity saveAdmin(@RequestBody SignUpRequest signUpRequest)
     {
         if(userRepository.existsByUserName(signUpRequest.getUserName()))
-        throw new EntityAlreadyExistException("User Name  already taken. Try different one");
+            throw new EntityAlreadyExistException("User Name  already taken. Try different one");
 
 
         if(userRepository.existsByEmail(signUpRequest.getEmail()))
@@ -69,7 +73,9 @@ public class UserService
                                         signUpRequest.getUserName(),
                                         signUpRequest.getEmail(),
                                         signUpRequest.getPassword(),
-                                        signUpRequest.getSex());
+                                        signUpRequest.getSex(),
+                                        signUpRequest.getDateOfBirth(),
+                                        signUpRequest.isOnline());
 
         user.setPassword(encoder.encode(user.getPassword()));
 
@@ -90,6 +96,26 @@ public class UserService
         return userRepository.save(user);
     }
 
+
+    public UserEntity updateAdmin(UserEntity user, String userName)
+    {
+        UserEntity entity = userRepository.findByUserName(userName).orElseThrow(
+                ()->new EntityNotFoundException("No user with username" + userName)
+        );
+
+        if(CheckRole.isAdmin(user.getRoles()))
+        {
+
+           userRepository.updateUser(user.getUserName(),user.getFirstName(), user.getLastName(), user.getEmail(), user.getPassword(),entity.getUserName());
+
+           return userRepository.save(user);
+        }
+        else
+        {
+            throw new OperationNotAllowedException("Subscribers cannot have profile picture");
+        }
+    }
+
     public UserEntity saveSubscriber(@Valid @RequestBody SignUpRequest signUpRequest) throws InterruptedException
     {
 
@@ -106,7 +132,8 @@ public class UserService
            );
            UserEntity user = new UserEntity(UidGenerator.generateRandomString(15),signUpRequest.getUserName(),
                                             signUpRequest.getEmail(),
-                                            signUpRequest.getPassword());
+                                            signUpRequest.getPassword(),
+                                            signUpRequest.isOnline());
 
            user.setRoles(Collections.singletonList(userRole));
 
@@ -118,7 +145,7 @@ public class UserService
     }
 
 
-    public ProfilePictureEntity updateProfilePicture(@NotBlank MultipartFile file,String userName)
+    public ProfilePictureEntity updateProfilePicture( MultipartFile file,String userName)
     {
         UserEntity user= userRepository
                                         .findByUserName(userName)
@@ -140,7 +167,7 @@ public class UserService
         }
     }
 
-    public UserEntity addContactInfo(@NotBlank ContactInfoEntity contactInfoEntity, String userName)
+    public UserEntity addContactInfo(@NotNull ContactInfoEntity contactInfoEntity, String userName)
     {
         UserEntity user = userRepository.findByUserName(userName)
                                         .orElseThrow(()->new EntityNotFoundException("No user with username " + userName));
@@ -160,7 +187,7 @@ public class UserService
 
     }
 
-    public UserEntity addExperience(@NotBlank ExperienceEntity experienceEntity, String name)
+    public UserEntity addExperience(@NotNull ExperienceEntity experienceEntity, String name)
     {
         UserEntity user = userRepository.findByUserName(name)
                 .orElseThrow(()->new EntityNotFoundException("No user with username " + name));
@@ -233,6 +260,27 @@ public class UserService
         }
 
     }
+    public UserEntity updateSkill(SkillEntity entity, String name)
+    {
+        UserEntity user = userRepository.findByUserName(name)
+                .orElseThrow(()->new EntityNotFoundException("No user with username " + name));
+
+        if(CheckRole.isAdmin(user.getRoles()))
+        {
+            SkillEntity skill = skillsRepository.findByTechnology(entity.getTechnology()).orElseThrow(
+                    ()->new EntityNotFoundException("No skill with that technology found")
+            );
+
+            skillsRepository.updateUpdateSkill(entity.getSkills(), entity.getTechnology());
+            //skillsRepository.save(newSkill);
+
+            return userRepository.save(user);
+        }
+        else
+        {
+            throw new OperationNotAllowedException("Subscribers cannot have skills details");
+        }
+    }
 
     public UserEntity addEducation(@NotBlank EducationEntity educationEntity, String name)
     {
@@ -257,4 +305,35 @@ public class UserService
         }
 
     }
+
+   public void deleteUserExperience(String name, String userName)
+    {
+        UserEntity user = userRepository.findByUserName(userName).orElseThrow(
+                ()->new EntityNotFoundException("No user with name" + userName)
+        );
+
+        ExperienceEntity experienceEntity = experienceRepository.findByName(name).orElseThrow(
+                ()-> new EntityNotFoundException("No experience found with name "+ name)
+        );
+       experienceRepository.deleteExperience(experienceEntity.getName(), user);
+    }
+
+
+    public void setIsPresent(UserEntity user, boolean isPresent)
+    {
+
+        user.setOnline(isPresent);
+        userRepository.save(user);
+    }
+
+    public void toggleUserPresence(String userName, boolean isPresent) {
+
+
+            UserEntity user = userRepository.findByUserName(userName).orElseThrow(
+                    ()-> new EntityNotFoundException("User not found")
+            );
+
+            this.setIsPresent(user, isPresent);
+
+   }
 }

@@ -4,6 +4,7 @@ import com.personal.website.assembler.ProjectAssembler;
 import com.personal.website.entity.ProjectDetailsEntity;
 import com.personal.website.exception.EntityNotFoundException;
 import com.personal.website.model.Project;
+import com.personal.website.payload.ApiResponse;
 import com.personal.website.repository.ProjectDetailsRepository;
 import com.personal.website.service.ProjectDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -45,7 +48,10 @@ public class ProjectController {
     @RequestMapping(
             value = "/{projectName}",
             method = RequestMethod.GET,
-            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+            produces = {
+                    MediaType.APPLICATION_JSON_VALUE,
+                    MediaType.APPLICATION_XML_VALUE}
+                    )
     public Project getProject(@PathVariable("projectName") String projectName) {
 
            ProjectDetailsEntity entity = projectDetailsRepository.findByName(projectName).orElseThrow(() -> new EntityNotFoundException("NO User with id " + projectName));
@@ -57,12 +63,49 @@ public class ProjectController {
         return model;
     }
 
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST,
+            produces = {
+            MediaType.APPLICATION_JSON_VALUE,
+            MediaType.APPLICATION_XML_VALUE}
+    )
     @PreAuthorize("hasRole('ADMIN')")
-    public ProjectDetailsEntity subscribe(@RequestBody ProjectDetailsEntity projectDetailsEntity) throws InterruptedException
+    public  ResponseEntity<ApiResponse> addProject(@NotNull @RequestBody ProjectDetailsEntity projectDetailsEntity) throws InterruptedException
     {
 
-        return projectDetailsService.saveProject(projectDetailsEntity);
-    }
+        projectDetailsService.saveProject(projectDetailsEntity);
 
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.CREATED,HttpStatus.CREATED.value(), "project added successfully" ),HttpStatus.CREATED);
+
+    }
+    @RequestMapping(value="/{projectName}",
+            method = RequestMethod.PUT,
+            produces = {
+            MediaType.APPLICATION_JSON_VALUE,
+            MediaType.APPLICATION_XML_VALUE}
+    )
+    @PreAuthorize("hasRole('ADMIN')")
+    public  ResponseEntity<ApiResponse> editProjectEntity(@PathVariable("projectName") String projectName, @NotBlank @RequestBody ProjectDetailsEntity projectDetailsEntity) throws InterruptedException
+    {
+
+        projectDetailsService.editProject(projectName,projectDetailsEntity);
+
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "project updated successfully" ),HttpStatus.OK);
+
+    }
+    @RequestMapping(value="/{projectName}",
+            method = RequestMethod.DELETE,
+            produces = {
+                    MediaType.APPLICATION_JSON_VALUE,
+                    MediaType.APPLICATION_XML_VALUE}
+    )
+    @PreAuthorize("hasRole('ADMIN')")
+    public  ResponseEntity<ApiResponse> deleteProject(@PathVariable("projectName") String projectName) throws InterruptedException
+    {
+        ProjectDetailsEntity entity = projectDetailsRepository.findByName((projectName)).orElseThrow(()->new EntityNotFoundException("No project found with name "+ projectName));
+
+        projectDetailsRepository.delete(entity);
+
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "project deletion successful" ),HttpStatus.OK);
+
+    }
 }

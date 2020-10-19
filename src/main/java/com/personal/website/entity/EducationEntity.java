@@ -6,11 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
-import java.time.LocalDate;
 
-@Entity
+@Entity(name="education")
 @Table(name="education")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -35,7 +36,8 @@ public class EducationEntity
 
 
     @JsonIgnore
-    @ManyToOne(targetEntity = UserEntity.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(targetEntity = UserEntity.class,cascade = CascadeType.REMOVE)
     @JoinColumn(name="user_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private UserEntity user;
 }

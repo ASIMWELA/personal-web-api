@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.hateoas.RepresentationModel;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -35,9 +36,17 @@ public class User extends RepresentationModel<User>
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String firstName;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    private int age;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String lastName;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    private boolean isOnline;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String sex;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private LocalDate dateOfBirth;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private ContactInfoEntity contactInfo;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -66,11 +75,14 @@ public class User extends RepresentationModel<User>
                     .sex(entity.getSex())
                     .roles(entity.getRoles())
                     .uid(entity.getUid())
+                    .age(entity.getAge())
+                    .dateOfBirth(entity.getDateOfBirth())
                     .contactInfo(entity.getContactInfo())
                     .experience(entity.getExperience())
                     .employment(entity.getEmployment())
                     .skills(entity.getSkills())
                     .education(entity.getEducation())
+                    .isOnline(entity.isOnline())
                     .profilePicture(entity.getProfilePicture())
                     .build().add(linkTo(methodOn(ProjectController.class)
                     .getAllProjects()).withRel("projects"));
@@ -79,6 +91,8 @@ public class User extends RepresentationModel<User>
         {
             model = User.builder().userName(entity.getUserName())
                         .email(entity.getEmail())
+                        .isOnline(entity.isOnline())
+                        .roles(entity.getRoles())
                         .uid(entity.getUid())
                         .build();
         }

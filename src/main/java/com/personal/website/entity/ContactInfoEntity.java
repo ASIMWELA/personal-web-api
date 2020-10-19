@@ -7,10 +7,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
-@Entity
+@Entity(name="contact_info")
 @Table(name="contact_info")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,10 +29,6 @@ public class ContactInfoEntity
     @Column(name="phone_number",unique=true, length = 20)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String phoneNumber;
-
-    @Column(name="post_office_box")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String postOfficeBox;
 
     @Column(name="physical_address")
     @JsonInclude(JsonInclude.Include.NON_NULL)

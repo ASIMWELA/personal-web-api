@@ -2,20 +2,21 @@ package com.personal.website.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.personal.website.repository.ExperienceRepository;
+import com.personal.website.utils.YearsCalculator;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
 
-@Entity
+@Entity(name="user")
 @Table(name="user_entity")
 @Data
 @NoArgsConstructor
@@ -59,7 +60,18 @@ public class UserEntity
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String sex;
 
-    public UserEntity(String uid, String firstName, String lastName, String userName, @Email(regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$", message = "Invalid email, please check your email") String email, @Pattern(regexp = "(?-i)(?=^.{5,}$)((?!.*\\s)(?=.*[A-Z])(?=.*[a-z]))((?=(.*\\d){1,})|(?=(.*\\W){1,}))^.*$") String password, String sex)
+    @Column(name="is_online")
+    private boolean isOnline ;
+
+    @Column(name="age")
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private int age ;
+
+    @Column(name="dob")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private LocalDate dateOfBirth;
+
+    public UserEntity(String uid, String firstName, String lastName, String userName, @Email(regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$", message = "Invalid email, please check your email") String email, @Pattern(regexp = "(?-i)(?=^.{5,}$)((?!.*\\s)(?=.*[A-Z])(?=.*[a-z]))((?=(.*\\d){1,})|(?=(.*\\W){1,}))^.*$") String password, String sex, LocalDate dateOfBirth, boolean isOnline)
     {
         this.uid = uid;
         this.firstName = firstName;
@@ -67,35 +79,45 @@ public class UserEntity
         this.userName = userName;
         this.email = email;
         this.password = password;
+        this.dateOfBirth=dateOfBirth;
+        this.isOnline = isOnline;
         this.sex = sex;
     }
 
-    public UserEntity(String uid,String userName, @Email(regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$", message = "Invalid email, please check your email") String email, @Pattern(regexp = "(?-i)(?=^.{5,}$)((?!.*\\s)(?=.*[A-Z])(?=.*[a-z]))((?=(.*\\d){1,})|(?=(.*\\W){1,}))^.*$") String password)
+
+    public UserEntity(String uid,String userName, @Email(regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$", message = "Invalid email, please check your email") String email, @Pattern(regexp = "(?-i)(?=^.{5,}$)((?!.*\\s)(?=.*[A-Z])(?=.*[a-z]))((?=(.*\\d){1,})|(?=(.*\\W){1,}))^.*$") String password, boolean isOnline)
     {   this.uid = uid;
         this.userName = userName;
         this.email = email;
+        this.isOnline = isOnline;
         this.password = password;
     }
 
-    @OneToOne(cascade = CascadeType.ALL)
+    public int getAge()
+    {
+        this.age = YearsCalculator.calculateYears(getDateOfBirth(), LocalDate.now());
+        return this.age;
+    }
+
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JoinColumn(name="contact_info_id", referencedColumnName = "contact_info_id")
     private ContactInfoEntity contactInfo;
 
 
-    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.REMOVE})
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<ExperienceEntity> experience;
 
-    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.REMOVE})
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<EmploymentEntity> employment;
 
-    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.REMOVE})
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<SkillEntity> skills;
 
-    @OneToMany(mappedBy = "user",cascade = {CascadeType.MERGE})
+    @OneToMany(mappedBy = "user",cascade = {CascadeType.REMOVE})
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<EducationEntity> education;
 
@@ -106,7 +128,7 @@ public class UserEntity
             joinColumns = @JoinColumn(name="user_id"),
             inverseJoinColumns = @JoinColumn(name="role_id"))
     private List<RoleEntinty> roles ;
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JoinColumn(name="profile_id", referencedColumnName = "profile_id")
     private ProfilePictureEntity profilePicture;

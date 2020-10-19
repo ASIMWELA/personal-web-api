@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
-@Entity
+@Entity(name="project")
 @Table(name="project_details")
 @AllArgsConstructor
 @NoArgsConstructor

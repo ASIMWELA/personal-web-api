@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
-@Entity
+@Entity(name="skills")
 @Table(name="skills")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -28,7 +28,7 @@ public class SkillEntity
     private String[] skills;
 
     @JsonIgnore
-    @ManyToOne(targetEntity = UserEntity.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(targetEntity = UserEntity.class)
     @JoinColumn(name="user_id")
     private UserEntity user;
 
