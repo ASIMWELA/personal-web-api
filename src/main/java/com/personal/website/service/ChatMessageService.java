@@ -5,7 +5,6 @@ import com.personal.website.entity.MessageEntity;
 import com.personal.website.exception.EntityNotFoundException;
 import com.personal.website.payload.MessageStatus;
 import com.personal.website.repository.MessageRepository;
-import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;

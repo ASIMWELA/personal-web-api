@@ -89,7 +89,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
              "/api/v1/auth/login",
                         "/api/v1/auth/signup-subscriber",
                         "/api/v1/auth/forgot-password",
-                        "/api/v1/auth/reset-password"
+                        "/api/v1/auth/reset-password",
+                            "/api/v1/sendEmail"
 
                             )
                             .permitAll()

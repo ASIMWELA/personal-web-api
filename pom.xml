@@ -10,12 +10,12 @@
     </parent>
     <groupId>com.personal-web</groupId>
     <artifactId>personal-website</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>personal-website</name>
     <description>personal website</description>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>11</java.version>
     </properties>
 
     <dependencies>

@@ -514,17 +514,21 @@ public class UserController
     //send email directly
     @RequestMapping(
             value = "/sendEmail",
-            method=RequestMethod.POST
+            method=RequestMethod.POST,
+            produces = {
+                    MediaType.APPLICATION_JSON_VALUE,
+                    MediaType.APPLICATION_XML_VALUE}
     )
-    public ResponseEntity<ApiResponse> sendEmail(@NotNull EmailMessage emailMessage)
+    public ResponseEntity<ApiResponse> sendEmail(@NotNull @RequestBody EmailMessage emailMessage)
     {
         SimpleMailMessage mail = new SimpleMailMessage();
         mail.setTo(emailReceiver);
         mail.setFrom(emailMessage.getSenderEmail());
         mail.setSubject(emailMessage.getTitle());
         mail.setText(emailMessage.getContent());
+        
         javaMailSender.send(mail);
-        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK, HttpStatus.OK.value(), "Experience deleted successfully"), HttpStatus.OK);
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK, HttpStatus.OK.value(), "Email sent successfully"), HttpStatus.OK);
     }
 
 
