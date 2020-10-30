@@ -146,7 +146,6 @@ public class UserController
         //de-link a user with its associated entities
         entity.setContactInfo(null);
         entity.setSkills(null);
-        entity.setEducation(null);
         entity.setEmployment(null);
         entity.setProfilePicture(null);
         entity.setExperience(null);

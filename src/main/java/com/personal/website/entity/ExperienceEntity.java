@@ -1,7 +1,6 @@
 package com.personal.website.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.personal.website.utils.YearsCalculator;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

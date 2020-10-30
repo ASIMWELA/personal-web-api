@@ -1,7 +1,6 @@
 package com.personal.website.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.personal.website.payload.MessageStatus;
 import lombok.AllArgsConstructor;
