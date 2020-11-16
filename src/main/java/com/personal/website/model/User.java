@@ -32,10 +32,12 @@ public class User extends RepresentationModel<User>
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String userName;
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String profilePicPath;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String email;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String firstName;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT)
     private int age;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String lastName;
@@ -59,8 +61,6 @@ public class User extends RepresentationModel<User>
     private List<EducationEntity> education;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<RoleEntinty> roles;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private ProfilePictureEntity profilePicture;
 
     public static User build(UserEntity entity)
     {   User model = null;
@@ -79,12 +79,12 @@ public class User extends RepresentationModel<User>
                     .dateOfBirth(entity.getDateOfBirth())
                     .contactInfo(entity.getContactInfo())
                     .experience(entity.getExperience())
+                   .profilePicPath(entity.getProfilePicPath())
                     .employment(entity.getEmployment())
                     .skills(entity.getSkills())
                     .education(entity.getEducation())
                     .isOnline(entity.isOnline())
-                    .profilePicture(entity.getProfilePicture())
-                    .build().add(linkTo(methodOn(ProjectController.class)
+                   .build().add(linkTo(methodOn(ProjectController.class)
                     .getAllProjects()).withRel("projects"));
         }
         else

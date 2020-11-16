@@ -31,6 +31,7 @@ public class UserAssembler implements RepresentationModelAssembler<UserEntity, U
                    .userName(entity.getUserName())
                    .isOnline(entity.isOnline())
                    .uid(entity.getUid())
+                   .profilePicPath(entity.getProfilePicPath())
                    .build()
                    .add(linkTo(
                            methodOn(UserController.class)
@@ -58,6 +59,7 @@ public class UserAssembler implements RepresentationModelAssembler<UserEntity, U
     @Override
     public CollectionModel<User> toCollectionModel(Iterable<? extends UserEntity> entities) {
         CollectionModel<User> users = RepresentationModelAssembler.super.toCollectionModel(entities);
+        users.add(linkTo(methodOn(UserController.class).getResources()).withRel("resources"));
         users.add(linkTo(methodOn(UserController.class).getAllUsers()).withSelfRel());
         return users;
     }

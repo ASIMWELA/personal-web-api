@@ -1,17 +1,20 @@
 package com.personal.website.controller;
 
 import com.google.common.collect.Lists;
+import com.personal.website.assembler.ResourceAssembler;
 import com.personal.website.assembler.UserAssembler;
 import com.personal.website.entity.*;
 import com.personal.website.exception.EntityNotFoundException;
+import com.personal.website.exception.OperationNotAllowedException;
+import com.personal.website.model.ResourceModelCollection;
 import com.personal.website.model.User;
 import com.personal.website.payload.ApiResponse;
 import com.personal.website.payload.EmailMessage;
 import com.personal.website.payload.UpdateAdminRequest;
 import com.personal.website.repository.*;
 import com.personal.website.service.ChatMessageService;
-import com.personal.website.service.ProfilePictureService;
 import com.personal.website.service.UserService;
+import com.personal.website.utils.CheckRole;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,10 +28,12 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,8 +44,6 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping("/api/v1")
 public class UserController
 {
-    @Autowired
-    private ProfilePictureService profilePictureService;
 
     @Autowired
     private UserService userService;
@@ -64,6 +67,9 @@ public class UserController
     private UserAssembler userAssembler;
 
     @Autowired
+    private ResourceAssembler resourceAssembler;
+
+    @Autowired
     private SkillsRepository skillsRepository;
 
     @Autowired
@@ -78,7 +84,7 @@ public class UserController
     @Autowired
     private JavaMailSender javaMailSender;
 
-    @Value("${app.emailOrigin}")
+    @Value("${app.emailReceiver}")
     private String emailReceiver;
 
     @RequestMapping(
@@ -93,6 +99,16 @@ public class UserController
 
     }
 
+    @RequestMapping(
+            value="/resources",
+            method = RequestMethod.GET,
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+
+    public ResponseEntity<CollectionModel<ResourceModelCollection>> getResources(){
+        List<ResourceEntityCollection> resources = new ArrayList<>();
+
+        return new ResponseEntity<>(resourceAssembler.toCollectionModel(resources), HttpStatus.OK);
+    }
     @RequestMapping(
             value="/users/{userName}",
             method = RequestMethod.PUT,
@@ -125,11 +141,6 @@ public class UserController
                 ()->new EntityNotFoundException("No user with username" + userName)
         );
 
-       // entity.getProfilePicture().setUser(null);
-        ProfilePictureEntity pPic = entity.getProfilePicture();
-        if(pPic!=null){
-            entity.getProfilePicture().setUser(null);
-        }
 
         ContactInfoEntity cInfo = entity.getContactInfo();
         if(cInfo!=null){
@@ -147,7 +158,6 @@ public class UserController
         entity.setContactInfo(null);
         entity.setSkills(null);
         entity.setEmployment(null);
-        entity.setProfilePicture(null);
         entity.setExperience(null);
         entity.setRoles(null);
 
@@ -175,14 +185,6 @@ public class UserController
        return user;
     }
 
-    @RequestMapping(
-            value="/profile/{userName}",
-            method = RequestMethod.PUT)
-    @PreAuthorize("hasRole('ADMIN')")
-    public ProfilePictureEntity upload(@RequestParam("profile")MultipartFile file, @PathVariable("userName") String userName)
-    {
-       return userService.updateProfilePicture(file, userName);
-    }
 
     @RequestMapping(
             value="/contact-info/{userName}",
@@ -528,6 +530,37 @@ public class UserController
         
         javaMailSender.send(mail);
         return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK, HttpStatus.OK.value(), "Email sent successfully"), HttpStatus.OK);
+    }
+
+    @RequestMapping(
+            value = "/upload-profile/{userName}",
+            method=RequestMethod.POST,
+            produces = {
+                    MediaType.APPLICATION_JSON_VALUE,
+                    MediaType.APPLICATION_XML_VALUE}
+    )
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse> uploadImage(@RequestParam("profileImage") MultipartFile imageFile, @PathVariable("userName") String userName) throws IOException {
+
+        UserEntity user = userRepository.findByUserName(userName).orElseThrow(()->
+            new EntityNotFoundException("No user with id " + userName )
+        );
+        if(!CheckRole.isAdmin(user.getRoles())){
+            throw new OperationNotAllowedException("User should only be an admin");
+        }
+        String fileName = StringUtils.cleanPath(imageFile.getOriginalFilename());
+
+        String uploadDir = "user-photos/" + user.getUserName();
+
+        String location = uploadDir+"/"+fileName;
+
+        user.setProfilePicPath(location);
+
+        userRepository.save(user);
+
+        userService.saveFile(uploadDir, fileName, imageFile);
+        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "Uploaded successfully" ),HttpStatus.OK);
+
     }
 
 

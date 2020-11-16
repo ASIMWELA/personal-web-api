@@ -23,6 +23,8 @@ public class SendEmail
     @Value("${app.emailOrigin}")
     private String emailSender;
 
+
+
     @Autowired
     public SendEmail(JavaMailSender javaMailSender)
     {
@@ -45,7 +47,6 @@ public class SendEmail
     @Async
     public void sendProjectAddedEmail(List<UserEntity> subscriberEntity, ProjectDetailsEntity projectDetailsEntity) throws MailException, InterruptedException
     {
-        Thread.sleep(10000);
 
         //construct project details
         String projectDetails = "\nProject Details\nName :"+projectDetailsEntity.getName()+"\nDetails: "+projectDetailsEntity.getDescription()+

@@ -92,13 +92,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter
                         "/api/v1/auth/reset-password",
                             "/api/v1/sendEmail"
 
+
                             )
                             .permitAll()
                     .antMatchers(HttpMethod.GET,
                         "/api/v1/users",
                                     "/api/v1/users/**",
                                     "/api/v1/projects",
-                                    "/api/v1/projects/**")
+                                    "/api/v1/projects/**",
+                            "/api/v1/resources")
                              .permitAll()
                 .antMatchers("/",
                             "/favicon.ico",

@@ -44,6 +44,10 @@ public class UserEntity
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String userName;
 
+    @Column(name="profile_pic_path")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String profilePicPath;
+
     @Column(name="email", unique = true)
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @Email(regexp = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$", message = "Invalid email, please check your email")
@@ -126,10 +130,5 @@ public class UserEntity
             joinColumns = @JoinColumn(name="user_id"),
             inverseJoinColumns = @JoinColumn(name="role_id"))
     private List<RoleEntinty> roles ;
-    @OneToOne(cascade = CascadeType.REMOVE)
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    @JoinColumn(name="profile_id", referencedColumnName = "profile_id")
-    private ProfilePictureEntity profilePicture;
-
 
 }

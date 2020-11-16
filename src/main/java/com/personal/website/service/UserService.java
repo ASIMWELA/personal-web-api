@@ -9,18 +9,23 @@ import com.personal.website.payload.SignUpRequest;
 import com.personal.website.repository.*;
 import com.personal.website.utils.CheckRole;
 import com.personal.website.utils.UidGenerator;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,9 +35,6 @@ public class UserService
 {
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private ProfilePictureService profilePictureService;
 
     @Autowired
     PasswordEncoder encoder;
@@ -57,6 +59,8 @@ public class UserService
 
     @Autowired
     private SkillsRepository skillsRepository;
+
+
 
     public UserEntity saveAdmin(@RequestBody SignUpRequest signUpRequest)
     {
@@ -144,28 +148,6 @@ public class UserService
            return user;
     }
 
-
-    public ProfilePictureEntity updateProfilePicture( MultipartFile file,String userName)
-    {
-        UserEntity user= userRepository
-                                        .findByUserName(userName)
-                                        .orElseThrow(()->new EntityNotFoundException("no user with username " + userName));
-
-        if(CheckRole.isAdmin(user.getRoles()))
-        {
-            ProfilePictureEntity profile = profilePictureService.saveProfilePicture(file);
-
-            profile.setUser(user);
-            user.setProfilePicture(profile);
-            userRepository.save(user);
-
-            return profile;
-        }
-        else
-        {
-            throw new OperationNotAllowedException("Subscribers cannot have profile picture");
-        }
-    }
 
     public UserEntity addContactInfo(@NotNull ContactInfoEntity contactInfoEntity, String userName)
     {
@@ -325,6 +307,19 @@ public class UserService
         user.setOnline(isPresent);
         userRepository.save(user);
     }
+    public static void saveFile(String uploadDir, String fileName, MultipartFile imageFile) throws IOException {
+            Path uploadPath = Paths.get(uploadDir);
+
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+            try (InputStream inputStream = imageFile.getInputStream()) {
+                Path filePath = uploadPath.resolve(fileName);
+                Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ioe) {
+                throw new IOException("Could not save image file: " + fileName, ioe);
+            }
+        }
 
     public void toggleUserPresence(String userName, boolean isPresent) {
 
