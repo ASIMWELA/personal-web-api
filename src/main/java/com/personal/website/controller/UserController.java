@@ -34,6 +34,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -549,6 +552,15 @@ public class UserController
             throw new OperationNotAllowedException("User should only be an admin");
         }
         String fileName = StringUtils.cleanPath(imageFile.getOriginalFilename());
+        
+
+        //delete previous profile pic
+
+        if(user.getProfilePicPath() != null){
+            Path p = Paths.get(user.getProfilePicPath());
+            user.setProfilePicPath(null);
+            Files.delete(p);
+        }
 
         String uploadDir = "user-photos/" + user.getUserName();
 
@@ -559,7 +571,7 @@ public class UserController
         userRepository.save(user);
 
         userService.saveFile(uploadDir, fileName, imageFile);
-        return new ResponseEntity<ApiResponse>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "Uploaded successfully" ),HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "Uploaded successfully" ),HttpStatus.OK);
 
     }
 
