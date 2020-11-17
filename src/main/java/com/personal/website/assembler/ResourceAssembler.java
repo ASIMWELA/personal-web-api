@@ -27,7 +27,6 @@ public class ResourceAssembler implements RepresentationModelAssembler<ResourceE
     {
         CollectionModel<ResourceModelCollection> resources = RepresentationModelAssembler.super.toCollectionModel(entities);
         resources.add(linkTo(methodOn(UserController.class).getAllUsers()).withRel("users"));
-        resources.add(linkTo(MessageController.class).withRel("messaging"));
         return resources;
     }
 }

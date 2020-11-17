@@ -552,14 +552,18 @@ public class UserController
             throw new OperationNotAllowedException("User should only be an admin");
         }
         String fileName = StringUtils.cleanPath(imageFile.getOriginalFilename());
-        
+
 
         //delete previous profile pic
 
         if(user.getProfilePicPath() != null){
             Path p = Paths.get(user.getProfilePicPath());
-            user.setProfilePicPath(null);
-            Files.delete(p);
+
+            if(Files.exists(p)){
+                user.setProfilePicPath(null);
+                Files.delete(p);
+            }
+
         }
 
         String uploadDir = "user-photos/" + user.getUserName();
