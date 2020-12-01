@@ -64,5 +64,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler
         return buildResponseEntity(apiError);
     }
 
+    @ExceptionHandler(FailedToSaveProfile.class)
+    protected ResponseEntity<Object> failedToSaveProfile(FailedToSaveProfile ex)
+    {
+        ApiException apiError = new ApiException(BAD_REQUEST);
+        apiError.setMessage(ex.getMessage());
+        apiError.setCode(apiError.getStatus().value());
+        return buildResponseEntity(apiError);
+    }
 
 }

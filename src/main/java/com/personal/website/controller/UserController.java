@@ -570,11 +570,13 @@ public class UserController
 
         String location = uploadDir+"/"+fileName;
 
+        UserService.saveFile(uploadDir, fileName, imageFile);
+
         user.setProfilePicPath(location);
 
         userRepository.save(user);
 
-        userService.saveFile(uploadDir, fileName, imageFile);
+
         return new ResponseEntity<>(new ApiResponse(HttpStatus.OK,HttpStatus.OK.value(), "Uploaded successfully" ),HttpStatus.OK);
 
     }

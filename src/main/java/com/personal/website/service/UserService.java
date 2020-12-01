@@ -3,6 +3,7 @@ package com.personal.website.service;
 import com.personal.website.entity.*;
 import com.personal.website.exception.EntityAlreadyExistException;
 import com.personal.website.exception.EntityNotFoundException;
+import com.personal.website.exception.FailedToSaveProfile;
 import com.personal.website.exception.OperationNotAllowedException;
 import com.personal.website.model.ERole;
 import com.personal.website.payload.SignUpRequest;
@@ -303,7 +304,6 @@ public class UserService
 
     public void setIsPresent(UserEntity user, boolean isPresent)
     {
-
         user.setOnline(isPresent);
         userRepository.save(user);
     }
@@ -317,12 +317,11 @@ public class UserService
                 Path filePath = uploadPath.resolve(fileName);
                 Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException ioe) {
-                throw new IOException("Could not save image file: " + fileName, ioe);
+                throw new FailedToSaveProfile("Failed to update your profile pic");
             }
         }
 
     public void toggleUserPresence(String userName, boolean isPresent) {
-
 
             UserEntity user = userRepository.findByUserName(userName).orElseThrow(
                     ()-> new EntityNotFoundException("User not found")
